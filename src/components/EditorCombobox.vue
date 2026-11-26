@@ -1,5 +1,5 @@
 <template>
-    <v-combobox :label="label" :model-value="chipTokens" :items="filteredOptions" autocomplete="off" multiple clearable
+    <v-combobox ref="comboboxEl" :label="label" :model-value="chipTokens" :items="filteredOptions" autocomplete="off" multiple clearable
         menu-icon="" item-title="label" item-value="id" @keydown.enter.prevent="onEnter" @click:clear="$emit('clear')"
         @update:modelValue="$emit('input', $event)" variant="underlined" hide-details>
 
@@ -18,7 +18,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick } from 'vue';
+import { nextTick, ref } from 'vue';
 import { EquationEditor, TokenType, FormulaDetails } from '@open-dcp/equation-editor';
 import type { FormattedOption } from '@/composables/useOptionFormatter';
 import VariableChip from '@/components/chips/VariableChip.vue';
@@ -34,6 +34,12 @@ import OperatorChip from '@/components/chips/OperatorChip.vue';
 import Divider from '@/components/options/Divider.vue';
 
 defineModel<FormulaDetails>();
+
+const comboboxEl = ref<{ focus?: () => void } | null>(null);
+
+defineExpose({
+    focus: () => comboboxEl.value?.focus?.()
+});
 
 const props = defineProps({
     editor: {

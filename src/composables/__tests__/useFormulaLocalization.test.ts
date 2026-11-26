@@ -66,4 +66,14 @@ describe('getLocalizedUnfancedDisplay', () => {
 
     expect(unfanced).toBe('x + y');
   });
+
+  it('inserts labels literally, even when they contain $ replacement patterns', () => {
+    const localizedDisplay = '{Cost $&} + {Rate $1}';
+    const variables = [
+      { label: 'Cost $&', value: 'cost' },
+      { label: 'Rate $1', value: 'rate' }
+    ] as any;
+
+    expect(getLocalizedUnfancedDisplay(localizedDisplay, variables)).toBe('Cost $& + Rate $1');
+  });
 });

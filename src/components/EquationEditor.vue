@@ -1,7 +1,7 @@
 <template>
     <div class="dcp-equation-editor-instance">
         <div class="flex items-center gap-2">
-            <EditorCombobox :label="label" v-if="!showRaw" @clear="editor.clear()" @enter="onEnter" @input="onInput"
+            <EditorCombobox ref="comboboxRef" :label="label" v-if="!showRaw" @clear="editor.clear()" @enter="onEnter" @input="onInput"
                 :editor="editor" :filtered-options="filteredOptions" :chip-tokens="chipTokens" />
 
             <EditorDisplayText :filtered-options="filteredOptions" @clear="editor.clear()" :label="label"
@@ -19,8 +19,8 @@
             </EditorFunctions>
         </div>
 
-        <div v-if="hasErrors" class="grid gap-2">
-            <div v-for="error in errorsToShow" :key="error" class="error w-full">{{ error }}</div>
+        <div v-if="hasErrors" class="grid gap-2" role="alert">
+            <div v-for="error in errorsToShow" :key="error" class="dcp-equation-editor-error w-full">{{ error }}</div>
         </div>
     </div>
 </template>
@@ -209,6 +209,9 @@ watch(errors, (newErrors) => {
     emit('errors', newErrors);
 });
 
+// `display` last emitted by the editor itself; used to tell parent-driven v-model changes apart from echoes.
+let lastEmittedDisplay: string | undefined;
+
 let validSubscription: any;
 let tokenSubscription: any;
 let formulaDetailsSubscription: any;
@@ -287,6 +290,7 @@ function bindSubscriptions() {
     });
 
     formulaDetailsSubscription = editor.formulaDetails$.subscribe((details: FormulaDetails) => {
+        lastEmittedDisplay = details.display ?? '';
         const localizedDisplay = getLocalizedDisplay(details, props.fence);
         modelValue.value = {
             ...details,
@@ -305,6 +309,17 @@ function unbindSubscriptions() {
 onMounted(() => {
     bindSubscriptions();
     editor.updateFormula(modelValue.value?.display || '');
+});
+
+// Apply v-model changes made by the parent after mount (formula loaded asynchronously, form reset,
+// switching records). Changes that are just the editor's own emission coming back are ignored.
+watch(() => modelValue.value?.display, (display) => {
+    const next = display ?? '';
+    if (next === lastEmittedDisplay) {
+        return;
+    }
+
+    editor.updateFormula(normalizeInputOperators(next));
 });
 
 onUnmounted(() => {
@@ -364,7 +379,7 @@ function onInput(newTokens: Array<any>) {
             filteredTokens.pop();
 
             nextTick(() => {
-                comboboxRef.value.focus();
+                comboboxRef.value?.focus();
             });
         }
     }
@@ -433,3 +448,10 @@ const handleToggleRaw = () => {
     emit('toggleRaw', showRaw.value);
 };
 </script>
+
+<style>
+.dcp-equation-editor-error {
+    color: #dc3545;
+    font-size: 0.875rem;
+}
+</style>

@@ -47,7 +47,8 @@ export function getLocalizedUnfancedDisplay(
         const fencedLabel = `${fence?.variableOpen ?? '{'}${variable.label}${fence?.variableClose ?? '}'}`;
         localizedUnfancedDisplay = localizedUnfancedDisplay.replace(
             new RegExp(escapeRegExp(fencedLabel), 'g'),
-            variable.label
+            // Function replacer: a label like "Cost $&" must be inserted literally, not as a replacement pattern.
+            () => variable.label
         );
     });
 

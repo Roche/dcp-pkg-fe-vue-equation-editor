@@ -1,5 +1,8 @@
 <template>
-    <v-menu v-model="showSuggestions" open-on-focus :close-on-content-click="false" offset-y>
+    <!-- Fixed max height (same as Vuetify's select menu in chip mode): without it the menu grows to the
+         viewport height with many options and the location strategy keeps re-positioning it (screen jumps). -->
+    <v-menu v-model="showSuggestions" open-on-focus :close-on-content-click="false" location="bottom start"
+        :max-height="SUGGESTIONS_MAX_HEIGHT">
         <template #activator="{ props: menuProps }">
             <v-text-field v-bind="menuProps" ref="inputRef" clearable @click:clear="$emit('clear')"
                 :model-value="modelValue" :label="label" hide-details @update:modelValue="onInput"
@@ -18,6 +21,8 @@ import CompleteOptions from '@/components/CompleteOptions.vue';
 import type { FormattedOption } from '@/composables/useOptionFormatter';
 import { ref } from 'vue';
 import { debounce } from 'lodash-es';
+
+const SUGGESTIONS_MAX_HEIGHT = 310;
 
 const inputRef = ref();
 const showSuggestions = ref(false);
